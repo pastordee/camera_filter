@@ -104,7 +104,7 @@ public class VideoGeneratorService: VideoGeneratorServiceInterface {
 
                     let textWidth = textGenerationFilter.outputImage!.extent.width
                     let textHeight = textGenerationFilter.outputImage!.extent.height
-                    let textRect = CGRect(x: 148.0, y: 316.0), width: textWidth, height: textHeight)
+                    let textRect = CGRect(x: 148.0, y: 316.0, width: textWidth, height: textHeight)
                     let textImage = textGenerationFilter.outputImage!.cropped(to: textRect)
                     let textImageWithAlpha = textImage.applyingFilter("CIColorMatrix", parameters: ["inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.5)])
                     let textImageWithAlphaCentered = textImageWithAlpha.transformed(by: CGAffineTransform(translationX: (source.extent.width - textWidth) / 2, y: (source.extent.height - textHeight) / 2))
