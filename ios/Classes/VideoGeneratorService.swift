@@ -113,18 +113,7 @@ public class VideoGeneratorService: VideoGeneratorServiceInterface {
                     let textImageWithAlphaCenteredAndResizedAndTranslatedAndCropped = textImageWithAlphaCenteredAndResizedAndTranslated.cropped(to: source.extent)
                     let textImageWithAlphaCenteredAndResizedAndTranslatedAndCroppedAndComposited = textImageWithAlphaCenteredAndResizedAndTranslatedAndCropped.applyingFilter("CISourceAtopCompositing", parameters: [kCIInputBackgroundImageKey: source])
 
-                     // Calculate the time-based display range
-                    let currentTimeInSeconds = CMTimeGetSeconds(filteringRequest.compositionTime)
-                    let currentTimeInMilliseconds = currentTimeInSeconds * 1000
-                       let displayStartTime = start
-                       let displayEndTime = start + duration
-
-                        // Check if the current time falls within the display range
-                       if currentTimeInMilliseconds >= displayStartTime && currentTimeInMilliseconds <= displayEndTime {
-                           source = textImage
-                               .transformed(by: transform)
-                               .applyingFilter("CISourceAtopCompositing", parameters: [kCIInputBackgroundImageKey: source])
-                       }
+                    
                     source = textImageWithAlphaCenteredAndResizedAndTranslatedAndCroppedAndComposited
                     source = textGenerationFilter.outputImage!.transformed(by: CGAffineTransform(translationX: CGFloat(truncating: x), y: filteringRequest.sourceImage.extent.height -  CGFloat(textSize) - CGFloat(truncating: y)))
                         .applyingFilter("CISourceAtopCompositing", parameters: [ kCIInputBackgroundImageKey: source])
