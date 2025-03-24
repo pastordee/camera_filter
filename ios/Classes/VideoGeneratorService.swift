@@ -81,6 +81,8 @@ public class VideoGeneratorService: VideoGeneratorServiceInterface {
                           let x = value["x"] as? NSNumber,
                           let y = value["y"] as? NSNumber,
                           let textSize = value["size"] as? NSNumber,
+                          let start = value["start"] as? NSNumber,
+                          let duration = value["duration"] as? NSNumber,
                           let color = value["color"] as? String else {
                         print("not found text overlay")
                         result(FlutterError(code: "processing_data_invalid",
@@ -98,8 +100,37 @@ public class VideoGeneratorService: VideoGeneratorServiceInterface {
                     let attributedQuote = NSAttributedString(string: text, attributes: attributes)
                     let textGenerationFilter = CIFilter(name: "CIAttributedTextImageGenerator")!
                     textGenerationFilter.setValue(attributedQuote, forKey: "inputText")
+
+
+                    let textWidth = textGenerationFilter.outputImage!.extent.width
+                    let textHeight = textGenerationFilter.outputImage!.extent.height
+                    let textRect = CGRect(x: 0, y: 0, width: textWidth, height: textHeight)
+                    let textImage = textGenerationFilter.outputImage!.cropped(to: textRect)
+                    let textImageWithAlpha = textImage.applyingFilter("CIColorMatrix", parameters: ["inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.5)])
+                    let textImageWithAlphaCentered = textImageWithAlpha.transformed(by: CGAffineTransform(translationX: (source.extent.width - textWidth) / 2, y: (source.extent.height - textHeight) / 2))
+                    let textImageWithAlphaCenteredAndResized = textImageWithAlphaCentered.transformed(by: CGAffineTransform(scaleX: source.extent.width / textWidth, y: source.extent.height / textHeight))
+                    let textImageWithAlphaCenteredAndResizedAndTranslated = textImageWithAlphaCenteredAndResized.transformed(by: CGAffineTransform(translationX: 0, y: 0))
+                    let textImageWithAlphaCenteredAndResizedAndTranslatedAndCropped = textImageWithAlphaCenteredAndResizedAndTranslated.cropped(to: source.extent)
+                    let textImageWithAlphaCenteredAndResizedAndTranslatedAndCroppedAndComposited = textImageWithAlphaCenteredAndResizedAndTranslatedAndCropped.applyingFilter("CISourceAtopCompositing", parameters: [kCIInputBackgroundImageKey: source])
+
+                     // Calculate the time-based display range
+                    let currentTimeInSeconds = CMTimeGetSeconds(filteringRequest.compositionTime)
+                    let currentTimeInMilliseconds = currentTimeInSeconds * 1000
+                       let displayStartTime = start
+                       let displayEndTime = start + duration
+
+                        // Check if the current time falls within the display range
+                       if currentTimeInMilliseconds >= displayStartTime && currentTimeInMilliseconds <= displayEndTime {
+                           source = textImage
+                               .transformed(by: transform)
+                               .applyingFilter("CISourceAtopCompositing", parameters: [kCIInputBackgroundImageKey: source])
+                       }
+                    source = textImageWithAlphaCenteredAndResizedAndTranslatedAndCroppedAndComposited
                     source = textGenerationFilter.outputImage!.transformed(by: CGAffineTransform(translationX: CGFloat(truncating: x), y: filteringRequest.sourceImage.extent.height -  CGFloat(textSize) - CGFloat(truncating: y)))
                         .applyingFilter("CISourceAtopCompositing", parameters: [ kCIInputBackgroundImageKey: source])
+
+
+
                 case "ImageOverlay":
                     guard let bitmap = value["bitmap"] as? FlutterStandardTypedData,
                           let x = value["x"] as? NSNumber,
@@ -184,4 +215,6 @@ struct TextOverlay {
     let y: NSNumber
     let size: NSNumber
     let color: String
+    let start: NSNumber
+    let duration: NSNumber
 }
