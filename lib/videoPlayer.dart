@@ -169,187 +169,189 @@ class _VideoPlayersState extends State<VideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black,
-      child: Stack(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: AspectRatio(
-                aspectRatio: 0.5,
-                child: ValueListenableBuilder(
-                    valueListenable: _filterColor,
-                    builder: (context, value, child) {
-                      return ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                            _filterColor.value, BlendMode.softLight),
-                        child: video.VideoPlayer(_videoPlayerController),
-                      );
-                    })),
-          ),
-          ValueListenableBuilder(
-              valueListenable: dragText,
-              builder: (context, bool value, Widget? child) {
-                if (value == false) {
-                  return Container();
-                } else {
-                  return positionedText();
-                }
-              }),
-          widget.applyFilters == false ? Container() : _buildFilterSelector(),
-          widget.applyFilters == false
-              ? Container()
-              : Positioned(
-                  top: 40,
-                  right: 10,
-                  child: Column(
-                    children: [
-                      PopupMenuButton(
-                        tooltip: textDelegate.changeBrushSize,
-                        shape: ContinuousRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        icon: Icon(Icons.format_size, color: Colors.white),
-                        itemBuilder: (_) => [_showTextSlider()],
-                      ),
-                      ValueListenableBuilder<Controller>(
-                          valueListenable: _controller,
-                          builder: (_, controller, __) {
-                            return IconButton(
-                              icon: Icon(
-                                Icons.color_lens_rounded,
-                                color: Colors.white,
-                              ),
-                              onPressed: () {
-                                colorPicker(controller);
-                              },
-                            );
-                          }),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.text_format,
-                            color: Colors.white,
+    return SafeArea(
+      child: Material(
+        color: Colors.black,
+        child: Stack(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: AspectRatio(
+                  aspectRatio: 0.5,
+                  child: ValueListenableBuilder(
+                      valueListenable: _filterColor,
+                      builder: (context, value, child) {
+                        return ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                              _filterColor.value, BlendMode.softLight),
+                          child: video.VideoPlayer(_videoPlayerController),
+                        );
+                      })),
+            ),
+            ValueListenableBuilder(
+                valueListenable: dragText,
+                builder: (context, bool value, Widget? child) {
+                  if (value == false) {
+                    return Container();
+                  } else {
+                    return positionedText();
+                  }
+                }),
+            widget.applyFilters == false ? Container() : _buildFilterSelector(),
+            widget.applyFilters == false
+                ? Container()
+                : Positioned(
+                    top: 40,
+                    right: 10,
+                    child: Column(
+                      children: [
+                        PopupMenuButton(
+                          tooltip: textDelegate.changeBrushSize,
+                          shape: ContinuousRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          onPressed: () {
-                            showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                enableDrag: true,
-                                isDismissible: true,
-                                builder: (builder) {
-                                  return textField(context);
-                                });
-                          }),
-                    ],
-                  )),
-          Positioned(
-              bottom: 10,
-              right: 10,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(60),
-                child: Material(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () async {
-                      var tempDir = await getTemporaryDirectory();
-                      final path =
-                          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}result.mp4';
-                      // Uint8List? bitmap;
-                      // final String inputWatermark = await rootBundle
-                      //     .loadString('assets/logo.png')
-                      //     .toString();
-
-                      // bitmap = (await rootBundle.load(
-                      //   "assets/logo.png",
-                      // ))
-                      //     .buffer
-                      //     .asUint8List();
-
-                      // String _path = 'assets/logo.png';
-                      // ByteData byteData = await rootBundle.load(_path);
-                      // String appDocDir =
-                      //     await getApplicationDocumentsDirectory()
-                      //         .then((value) => value.path);
-                      // File file = await File('$appDocDir/$_path')
-                      //     .create(recursive: true);
-                      // _path = await file
-                      //     .writeAsBytes(byteData.buffer.asUint8List(
-                      //         byteData.offsetInBytes, byteData.lengthInBytes))
-                      //     .then((value) => value.path);
-                      //
-                      // final arguments =
-                      //     '-i ${widget.video} -i $_path  -s 1280x720 -ar 44100 -async 44100 -r 29.970 -ac 2 -qscale 5 -filter_complex overlay=200:200 -codec:a copy $path';
-                      //
-                      // await FFmpegKit.executeAsync(arguments)
-                      //     .then((value) async {
-                      //   ReturnCode? returnCode = await value.getReturnCode();
-                      //
-                      //   SessionState sessionState = await value.getState();
-                      //
-                      //   debugPrint("Video conversion ${sessionState.name}");
-                      //   makeVideo(path);
-                      // });
-                      // print("outPath $path");
-                      // // makeVideo(path);
-                      // print("outPath $path");
-
-                      try {
-                        var a = 1.7 * int.parse(xPos.toString().split(".")[0]);
-                        var b = 1.7 * int.parse(yPos.toString().split(".")[0]);
-
-                        if (text == "" && _filterColor.value.value == 0) {
-                          widget.onVideoDone!.call(widget.video);
-                        } else if (text == "" &&
-                            _filterColor.value.value != 0) {
-                          final tapiocaBalls = [
-                            TapiocaBall.filterFromColor(
-                                Color(_filterColor.value.value)),
-                          ];
-                          makeVideo(tapiocaBalls, path);
-                        } else if (text != "" &&
-                            _filterColor.value.value == 0) {
-                          final tapiocaBalls = [
-                            TapiocaBall.textOverlay(
-                                text,
-                                int.parse(a.toString().split(".")[0]),
-                                int.parse(b.toString().split(".")[0]),
-                                (fontSize * 2).toInt(),
-                                Color(colorValue.value))
-                          ];
-                          makeVideo(tapiocaBalls, path);
-                        } else {
-                          final tapiocaBalls = [
-                            TapiocaBall.filterFromColor(
-                                Color(_filterColor.value.value)),
-                            TapiocaBall.textOverlay(
-                                text,
-                                int.parse(a.toString().split(".")[0]),
-                                int.parse(b.toString().split(".")[0]),
-                                (fontSize * 2).toInt(),
-                                Color(colorValue.value))
-                          ];
-                          makeVideo(tapiocaBalls, path);
+                          icon: Icon(Icons.format_size, color: Colors.white),
+                          itemBuilder: (_) => [_showTextSlider()],
+                        ),
+                        ValueListenableBuilder<Controller>(
+                            valueListenable: _controller,
+                            builder: (_, controller, __) {
+                              return IconButton(
+                                icon: Icon(
+                                  Icons.color_lens_rounded,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  colorPicker(controller);
+                                },
+                              );
+                            }),
+                        IconButton(
+                            icon: const Icon(
+                              Icons.text_format,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  enableDrag: true,
+                                  isDismissible: true,
+                                  builder: (builder) {
+                                    return textField(context);
+                                  });
+                            }),
+                      ],
+                    )),
+            Positioned(
+                bottom: 10,
+                right: 10,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(60),
+                  child: Material(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () async {
+                        var tempDir = await getTemporaryDirectory();
+                        final path =
+                            '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}result.mp4';
+                        // Uint8List? bitmap;
+                        // final String inputWatermark = await rootBundle
+                        //     .loadString('assets/logo.png')
+                        //     .toString();
+      
+                        // bitmap = (await rootBundle.load(
+                        //   "assets/logo.png",
+                        // ))
+                        //     .buffer
+                        //     .asUint8List();
+      
+                        // String _path = 'assets/logo.png';
+                        // ByteData byteData = await rootBundle.load(_path);
+                        // String appDocDir =
+                        //     await getApplicationDocumentsDirectory()
+                        //         .then((value) => value.path);
+                        // File file = await File('$appDocDir/$_path')
+                        //     .create(recursive: true);
+                        // _path = await file
+                        //     .writeAsBytes(byteData.buffer.asUint8List(
+                        //         byteData.offsetInBytes, byteData.lengthInBytes))
+                        //     .then((value) => value.path);
+                        //
+                        // final arguments =
+                        //     '-i ${widget.video} -i $_path  -s 1280x720 -ar 44100 -async 44100 -r 29.970 -ac 2 -qscale 5 -filter_complex overlay=200:200 -codec:a copy $path';
+                        //
+                        // await FFmpegKit.executeAsync(arguments)
+                        //     .then((value) async {
+                        //   ReturnCode? returnCode = await value.getReturnCode();
+                        //
+                        //   SessionState sessionState = await value.getState();
+                        //
+                        //   debugPrint("Video conversion ${sessionState.name}");
+                        //   makeVideo(path);
+                        // });
+                        // print("outPath $path");
+                        // // makeVideo(path);
+                        // print("outPath $path");
+      
+                        try {
+                          var a = 1.7 * int.parse(xPos.toString().split(".")[0]);
+                          var b = 1.7 * int.parse(yPos.toString().split(".")[0]);
+      
+                          if (text == "" && _filterColor.value.value == 0) {
+                            widget.onVideoDone!.call(widget.video);
+                          } else if (text == "" &&
+                              _filterColor.value.value != 0) {
+                            final tapiocaBalls = [
+                              TapiocaBall.filterFromColor(
+                                  Color(_filterColor.value.value)),
+                            ];
+                            makeVideo(tapiocaBalls, path);
+                          } else if (text != "" &&
+                              _filterColor.value.value == 0) {
+                            final tapiocaBalls = [
+                              TapiocaBall.textOverlay(
+                                  text,
+                                  int.parse(a.toString().split(".")[0]),
+                                  int.parse(b.toString().split(".")[0]),
+                                  (fontSize * 2).toInt(),
+                                  Color(colorValue.value))
+                            ];
+                            makeVideo(tapiocaBalls, path);
+                          } else {
+                            final tapiocaBalls = [
+                              TapiocaBall.filterFromColor(
+                                  Color(_filterColor.value.value)),
+                              TapiocaBall.textOverlay(
+                                  text,
+                                  int.parse(a.toString().split(".")[0]),
+                                  int.parse(b.toString().split(".")[0]),
+                                  (fontSize * 2).toInt(),
+                                  Color(colorValue.value))
+                            ];
+                            makeVideo(tapiocaBalls, path);
+                          }
+                        } on PlatformException {
+                          print("error!!!!");
                         }
-                      } on PlatformException {
-                        print("error!!!!");
-                      }
-                    },
-                    child: widget.sendButtonWidget ??
-                        Container(
-                          height: 60,
-                          width: 60,
-                          decoration: BoxDecoration(
-                              color: Color(0xffd51820),
-                              borderRadius: BorderRadius.circular(60)),
-                          child: Center(
-                            child: Icon(Icons.send),
+                      },
+                      child: widget.sendButtonWidget ??
+                          Container(
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                                color: Color(0xffd51820),
+                                borderRadius: BorderRadius.circular(60)),
+                            child: Center(
+                              child: Icon(Icons.send),
+                            ),
                           ),
-                        ),
+                    ),
                   ),
-                ),
-              )),
-        ],
+                )),
+          ],
+        ),
       ),
     );
   }
